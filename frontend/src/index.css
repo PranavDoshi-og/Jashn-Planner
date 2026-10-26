@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Bricolage Grotesque", system-ui, sans-serif;
+  --font-sans: "Instrument Sans", system-ui, sans-serif;
+  --color-mist: #f1effa;
+  --color-ink: #1e1442;
+  --color-marigold: #f5a60b;
+  --color-rose: #b42356;
+  --color-teal: #0e7c74;
+}
+
+body { background: var(--color-mist); color: var(--color-ink); font-family: var(--font-sans); }
+:focus-visible { outline: 3px solid var(--color-rose); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
