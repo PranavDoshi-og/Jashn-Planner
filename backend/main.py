@@ -211,6 +211,11 @@ def normalize_budget(lines: list[BudgetLine], total: int) -> list[dict]:
     return out
 
 
+@app.get("/")
+def root():
+    return {"ok": True, "service": "Jashn API", "health": "/api/health"}
+
+
 @app.get("/api/health")
 def health():
     return {"ok": True, "model": MODEL}
