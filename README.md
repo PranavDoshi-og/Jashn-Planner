@@ -50,22 +50,27 @@ Open http://localhost:5173
 5. Close on: structured output means every section is validated, not free text.
 
 ## Tests
-```
+```bash
+# Backend pytest suite (19 tests)
 cd backend
 pip install -r requirements-dev.txt
 pytest
+
+# Frontend vitest suite (12 tests)
+cd ../frontend
+npm test
 ```
-19 tests cover budget normalisation, input validation, section regeneration, prompt-injection wrapping, rate limiting, security headers and error leakage. CI (`.github/workflows/ci.yml`) runs them and builds the frontend on every push.
+19 backend tests cover budget normalisation, input validation, section regeneration, prompt-injection wrapping, rate limiting, security headers and error leakage. 12 frontend tests cover UI rendering, celebration presets, tab navigation, dynamic budget slider calculations, vendor checklist persistence, and rate-limit countdowns. CI (`.github/workflows/ci.yml`) runs both test suites and builds the production bundle on every push.
 
 ## How this maps to the judging criteria
 | Criterion | What the project does |
 |---|---|
-| Problem alignment | Covers every item in the brief: weddings, birthdays and community events; budgets; timelines; vendor checklists; personalised ideas. |
-| Code quality | Typed Pydantic schemas, one place for the prompt, small endpoints, CI. |
-| Security | No secrets in the repo (`.env` is git-ignored); input length, range and format limits; per-IP rate limit; user text wrapped as data; Gemini errors logged server-side, never returned; CORS restricted to your frontend; security headers; API docs disabled. |
-| Efficiency | One structured call per plan; per-section regeneration instead of re-running everything; budget slider is computed in the browser; gzip; stale requests are cancelled; optional `GEMINI_THINKING_BUDGET=0` for faster Flash responses. |
-| Testing | pytest suite and CI above. |
-| Accessibility | Labelled fields, skip link, tabs with arrow-key navigation and ARIA roles, live status for loading, error alerts, visible focus, text contrast of 4.5:1 or better, reduced-motion support, data is never colour-only. |
+| Problem alignment | Covers every item in the brief: Indian and global weddings, birthdays and community festivals; normalized budgets with contingency buffer; backward timelines culminating in a hour-by-hour day-of run sheet; interactive vendor checklists with negotiation questions; curated themes, dietary-conscious menus and guest activities. |
+| Code quality | Modular frontend components (`Navbar`, `EventForm`, `PlanSummary`, `BudgetTab`, `TimelineTab`, `VendorsTab`, `IdeasTab`, `PrintView`), typed Pydantic schemas, isolated prompt system, CI across backend and frontend. |
+| Security | No secrets in the repo (`.env` is git-ignored); input length, range and format limits on client and server; client-side rate limit countdown on HTTP 429; user text wrapped as data (`<event>`, `<tweak>`); Gemini errors logged server-side, never returned; CORS restricted to frontend; security headers (`nosniff`, `DENY`); API docs disabled. |
+| Efficiency | One structured call per plan; per-section regeneration instead of re-running everything; client-side instant budget slider rescaling; local checklist state persistence in `localStorage`; lightweight SVG icons (0 external icon bundles); gzip; stale requests cancelled with `AbortController`; optional `GEMINI_THINKING_BUDGET=0` for sub-second Flash responses. |
+| Testing | 19 pytest test cases in backend + 12 Vitest/React Testing Library test cases in frontend running in GitHub Actions CI. |
+| Accessibility | Labelled fields with explicit `htmlFor`/`id`, skip to main content link, accessible ARIA tablist with Arrow and Home/End keyboard navigation, `aria-live="polite"` status announcements for loading states, high contrast color palette, visible focus outlines, and `prefers-reduced-motion` compliance. |
 
 ## Submission checklist (deadline 1 Nov 2026, 11:59 PM IST; max 3 submissions)
 - [ ] Public GitHub repo, under 10 MB (no `node_modules`, `.venv` or `dist`; the `.gitignore` covers these). Open the link in a private window to confirm it is public.
