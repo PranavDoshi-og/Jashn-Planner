@@ -1,12 +1,10 @@
-export function PrintView({ plan, intake, total }) {
+import { memo } from "react";
+import { formatCurrency } from "../utils/formatters";
+
+export const PrintView = memo(function PrintView({ plan, intake, total }) {
   if (!plan || !intake) return null;
 
-  const money = (n) =>
-    new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: intake.currency || "INR",
-      maximumFractionDigits: 0,
-    }).format(n);
+  const currency = intake.currency || "INR";
 
   return (
     <div className="hidden print:block text-black p-8 max-w-4xl mx-auto space-y-6">
@@ -25,7 +23,7 @@ export function PrintView({ plan, intake, total }) {
         <div><strong>Date:</strong> {intake.event_date}</div>
         <div><strong>Location:</strong> {intake.location}</div>
         <div><strong>Guests:</strong> {intake.guests}</div>
-        <div><strong>Total Budget:</strong> {money(total)}</div>
+        <div><strong>Total Budget:</strong> {formatCurrency(total, currency)}</div>
         <div><strong>Culture/Tradition:</strong> {intake.culture || "General"}</div>
       </div>
 
@@ -52,7 +50,7 @@ export function PrintView({ plan, intake, total }) {
               <tr key={b.category} className="border-b border-gray-300">
                 <td className="py-1 font-semibold">{b.category}</td>
                 <td className="py-1">{b.percent}%</td>
-                <td className="py-1 font-mono">{money(Math.round((total * b.percent) / 100))}</td>
+                <td className="py-1 font-mono">{formatCurrency(Math.round((total * b.percent) / 100), currency)}</td>
                 <td className="py-1">{b.note}</td>
               </tr>
             ))}
@@ -125,5 +123,4 @@ export function PrintView({ plan, intake, total }) {
       </div>
     </div>
   );
-}
-
+});

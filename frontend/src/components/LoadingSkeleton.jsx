@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { SparklesIcon, WalletIcon, ClockIcon, UsersIcon } from "./Icons";
 
 const STEPS = [
@@ -8,7 +8,7 @@ const STEPS = [
   { icon: UsersIcon, title: "Compiling vendor checklist, due diligence & creative themes…" },
 ];
 
-export function LoadingSkeleton() {
+export const LoadingSkeleton = memo(function LoadingSkeleton() {
   const [activeStep, setActiveStep] = useState(0);
 
   useEffect(() => {
@@ -88,5 +88,5 @@ export function LoadingSkeleton() {
       </div>
     </div>
   );
-}
+});
 

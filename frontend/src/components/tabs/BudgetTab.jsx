@@ -1,4 +1,6 @@
-import { WalletIcon, SparklesIcon, CheckCircleIcon } from "../Icons";
+import { memo, useMemo } from "react";
+import { CheckCircleIcon } from "../Icons";
+import { formatCurrency } from "../../utils/formatters";
 
 const SWATCHES = [
   "#B42356", // Rose
@@ -12,19 +14,24 @@ const SWATCHES = [
   "#6B7280", // Gray (Contingency)
 ];
 
-export function BudgetTab({ budget, total, setTotal, initialBudget, currency = "INR" }) {
-  const money = (n) =>
-    new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: currency,
-      maximumFractionDigits: 0,
-    }).format(n);
+export const BudgetTab = memo(function BudgetTab({
+  budget,
+  total,
+  setTotal,
+  initialBudget,
+  currency = "INR",
+}) {
+  const minRange = useMemo(() => Math.round(initialBudget * 0.5), [initialBudget]);
+  const maxRange = useMemo(() => Math.round(initialBudget * 2.0), [initialBudget]);
+  const stepVal = useMemo(
+    () => Math.max(1000, Math.round(initialBudget / 100)),
+    [initialBudget]
+  );
 
-  const minRange = Math.round(initialBudget * 0.5);
-  const maxRange = Math.round(initialBudget * 2.0);
-  const stepVal = Math.max(1000, Math.round(initialBudget / 100));
-
-  const contingency = budget.find((b) => b.category.toLowerCase().includes("contingency"));
+  const contingency = useMemo(
+    () => budget.find((b) => b.category.toLowerCase().includes("contingency")),
+    [budget]
+  );
 
   return (
     <div className="space-y-6">
@@ -34,9 +41,7 @@ export function BudgetTab({ budget, total, setTotal, initialBudget, currency = "
           <span className="text-xs font-bold text-ink uppercase tracking-wider">
             Portfolio Allocation ({budget.length} Categories)
           </span>
-          <span className="text-xs text-ink-muted">
-            100% Normalized Sum
-          </span>
+          <span className="text-xs text-ink-muted">100% Normalized Sum</span>
         </div>
 
         <div
@@ -52,7 +57,10 @@ export function BudgetTab({ budget, total, setTotal, initialBudget, currency = "
                 backgroundColor: SWATCHES[i % SWATCHES.length],
               }}
               className="h-full transition-all duration-300 relative group cursor-pointer"
-              title={`${b.category}: ${b.percent}% (${money(Math.round((total * b.percent) / 100))})`}
+              title={`${b.category}: ${b.percent}% (${formatCurrency(
+                Math.round((total * b.percent) / 100),
+                currency
+              )})`}
             />
           ))}
         </div>
@@ -85,7 +93,7 @@ export function BudgetTab({ budget, total, setTotal, initialBudget, currency = "
           </div>
           <div className="flex items-center gap-2">
             <span className="font-display text-xl font-extrabold text-rose">
-              {money(total)}
+              {formatCurrency(total, currency)}
             </span>
             {total !== initialBudget && (
               <button
@@ -112,13 +120,13 @@ export function BudgetTab({ budget, total, setTotal, initialBudget, currency = "
           aria-valuemin={minRange}
           aria-valuemax={maxRange}
           aria-valuenow={total}
-          aria-valuetext={money(total)}
+          aria-valuetext={formatCurrency(total, currency)}
         />
 
         <div className="mt-1 flex justify-between text-[11px] text-ink-light">
-          <span>Min: {money(minRange)}</span>
-          <span className="font-medium text-ink">Base: {money(initialBudget)}</span>
-          <span>Max: {money(maxRange)}</span>
+          <span>Min: {formatCurrency(minRange, currency)}</span>
+          <span className="font-medium text-ink">Base: {formatCurrency(initialBudget, currency)}</span>
+          <span>Max: {formatCurrency(maxRange, currency)}</span>
         </div>
       </div>
 
@@ -148,7 +156,7 @@ export function BudgetTab({ budget, total, setTotal, initialBudget, currency = "
                 </div>
                 <div className="text-right">
                   <div className="font-display text-base font-black text-ink">
-                    {money(catAmount)}
+                    {formatCurrency(catAmount, currency)}
                   </div>
                   <span className="inline-block rounded bg-mist px-1.5 py-0.5 text-[10px] font-bold text-ink-muted">
                     {b.percent}% of total
@@ -167,11 +175,15 @@ export function BudgetTab({ budget, total, setTotal, initialBudget, currency = "
         <div className="rounded-xl border border-teal/30 bg-teal-light/40 p-3.5 text-xs text-teal flex items-center gap-2">
           <CheckCircleIcon className="w-4 h-4 shrink-0 text-teal" />
           <span>
-            <strong>Contingency Shield Active:</strong> {contingency.percent}% ({money(Math.round((total * contingency.percent) / 100))}) is reserved for unexpected last-minute expenses or emergencies.
+            <strong>Contingency Shield Active:</strong> {contingency.percent}% (
+            {formatCurrency(
+              Math.round((total * contingency.percent) / 100),
+              currency
+            )}
+            ) is reserved for unexpected last-minute expenses or emergencies.
           </span>
         </div>
       )}
     </div>
   );
-}
-
+});

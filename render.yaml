@@ -16,3 +16,4 @@ services:
         value: "0"
       - key: ALLOWED_ORIGINS
         value: "*"
+

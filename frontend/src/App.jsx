@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Navbar } from "./components/Navbar";
 import { EventForm } from "./components/EventForm";
 import { PlanSummary } from "./components/PlanSummary";
@@ -72,76 +72,82 @@ export default function App() {
     return () => clearInterval(interval);
   }, [rateLimitCountdown]);
 
-  const nextSignal = () => {
+  const nextSignal = useCallback(() => {
     ctrl.current?.abort();
     ctrl.current = new AbortController();
     return ctrl.current.signal;
-  };
+  }, []);
 
-  async function generate(e) {
-    if (e) e.preventDefault();
-    setBusy("all");
-    setError("");
-    try {
-      const data = await post("/api/plan", form, nextSignal());
-      setPlan(data);
-      setIntake(form);
-      setTotal(form.budget);
-      setDone({});
+  const generate = useCallback(
+    async (e) => {
+      if (e) e.preventDefault();
+      setBusy("all");
+      setError("");
       try {
-        localStorage.removeItem("jashn_vendor_tasks");
-      } catch (err) {}
-      setTab("budget");
-    } catch (err) {
-      if (err.name !== "AbortError") {
-        setError(err.message);
-        if (err.status === 429) {
-          setRateLimitCountdown(60);
-        }
-      }
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  async function regen(section, tweak) {
-    setBusy(section);
-    setError("");
-    try {
-      const data = await post(
-        "/api/section",
-        {
-          intake: { ...intake, budget: total },
-          section,
-          tweak,
-          categories: plan.budget.map((b) => b.category),
-        },
-        nextSignal()
-      );
-      setPlan((p) => ({ ...p, [section]: data[section] }));
-      if (section === "vendors") {
+        const data = await post("/api/plan", form, nextSignal());
+        setPlan(data);
+        setIntake(form);
+        setTotal(form.budget);
         setDone({});
         try {
           localStorage.removeItem("jashn_vendor_tasks");
         } catch (err) {}
-      }
-    } catch (err) {
-      if (err.name !== "AbortError") {
-        setError(err.message);
-        if (err.status === 429) {
-          setRateLimitCountdown(60);
+        setTab("budget");
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          setError(err.message);
+          if (err.status === 429) {
+            setRateLimitCountdown(60);
+          }
         }
+      } finally {
+        setBusy(null);
       }
-    } finally {
-      setBusy(null);
-    }
-  }
+    },
+    [form, nextSignal]
+  );
 
-  function handlePrint() {
+  const regen = useCallback(
+    async (section, tweak) => {
+      setBusy(section);
+      setError("");
+      try {
+        const data = await post(
+          "/api/section",
+          {
+            intake: { ...intake, budget: total },
+            section,
+            tweak,
+            categories: plan?.budget?.map((b) => b.category) || [],
+          },
+          nextSignal()
+        );
+        setPlan((p) => ({ ...p, [section]: data[section] }));
+        if (section === "vendors") {
+          setDone({});
+          try {
+            localStorage.removeItem("jashn_vendor_tasks");
+          } catch (err) {}
+        }
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          setError(err.message);
+          if (err.status === 429) {
+            setRateLimitCountdown(60);
+          }
+        }
+      } finally {
+        setBusy(null);
+      }
+    },
+    [intake, total, plan, nextSignal]
+  );
+
+  const handlePrint = useCallback(() => {
     window.print();
-  }
+  }, []);
 
-  function handleExport() {
+  const handleExport = useCallback(() => {
     if (!plan || !intake) return;
     const exportData = {
       app: "Jashn AI Celebration Planner",
@@ -158,33 +164,41 @@ export default function App() {
     a.download = `jashn-${intake.event_type.toLowerCase()}-${intake.event_date}.json`;
     a.click();
     URL.revokeObjectURL(url);
-  }
+  }, [plan, intake, total]);
 
   // Keyboard navigation for tablist
-  function onTabKey(e) {
-    const currentIndex = TABS.findIndex((t) => t.id === tab);
-    let nextIndex;
-    if (e.key === "ArrowRight") {
-      nextIndex = (currentIndex + 1) % TABS.length;
-    } else if (e.key === "ArrowLeft") {
-      nextIndex = (currentIndex - 1 + TABS.length) % TABS.length;
-    } else if (e.key === "Home") {
-      nextIndex = 0;
-    } else if (e.key === "End") {
-      nextIndex = TABS.length - 1;
-    } else {
-      return;
-    }
-    e.preventDefault();
-    const nextTab = TABS[nextIndex].id;
-    setTab(nextTab);
-    document.getElementById(`tab-${nextTab}`)?.focus();
-  }
+  const onTabKey = useCallback(
+    (e) => {
+      const currentIndex = TABS.findIndex((t) => t.id === tab);
+      let nextIndex;
+      if (e.key === "ArrowRight") {
+        nextIndex = (currentIndex + 1) % TABS.length;
+      } else if (e.key === "ArrowLeft") {
+        nextIndex = (currentIndex - 1 + TABS.length) % TABS.length;
+      } else if (e.key === "Home") {
+        nextIndex = 0;
+      } else if (e.key === "End") {
+        nextIndex = TABS.length - 1;
+      } else {
+        return;
+      }
+      e.preventDefault();
+      const nextTab = TABS[nextIndex].id;
+      setTab(nextTab);
+      document.getElementById(`tab-${nextTab}`)?.focus();
+    },
+    [tab]
+  );
 
-  const tasksTotal = plan
-    ? plan.vendors.reduce((n, v) => n + v.tasks.length, 0)
-    : 0;
-  const tasksDone = Object.values(done).filter(Boolean).length;
+  const tasksTotal = useMemo(
+    () => (plan ? plan.vendors.reduce((n, v) => n + v.tasks.length, 0) : 0),
+    [plan]
+  );
+
+  const tasksDone = useMemo(
+    () => Object.values(done).filter(Boolean).length,
+    [done]
+  );
 
   return (
     <div className="min-h-screen">

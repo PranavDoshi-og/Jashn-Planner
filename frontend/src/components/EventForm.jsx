@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, memo } from "react";
 import { SparklesIcon, CalendarIcon, UsersIcon, WalletIcon, MapPinIcon, AlertCircleIcon, RefreshCwIcon } from "./Icons";
 import { PRESETS, isoInDays } from "../types/presets";
+import { formatCurrency } from "../utils/formatters";
 
 const TYPES = ["Wedding", "Birthday", "Anniversary", "Baby shower", "Community festival", "Corporate celebration"];
 const CURRENCIES = ["INR", "USD", "EUR", "GBP", "AED"];
 
-export function EventForm({
+export const EventForm = memo(function EventForm({
   form,
   setForm,
   onSubmit,
@@ -37,19 +38,6 @@ export function EventForm({
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && !busy) {
       e.preventDefault();
       onSubmit(e);
-    }
-  };
-
-  const formatCurrencyPreview = (num, curr) => {
-    if (!num) return "";
-    try {
-      return new Intl.NumberFormat("en-IN", {
-        style: "currency",
-        currency: curr || "INR",
-        maximumFractionDigits: 0,
-      }).format(num);
-    } catch {
-      return `${num} ${curr}`;
     }
   };
 
@@ -155,7 +143,7 @@ export function EventForm({
             </label>
             {form.budget ? (
               <span className="text-xs font-semibold text-teal">
-                {formatCurrencyPreview(form.budget, form.currency)}
+                {formatCurrency(form.budget, form.currency)}
               </span>
             ) : null}
           </div>
@@ -297,5 +285,5 @@ export function EventForm({
       </form>
     </div>
   );
-}
+});
 

@@ -1,6 +1,6 @@
-import { SparklesIcon } from "../Icons";
+import { memo } from "react";
 
-export function IdeasTab({ ideas }) {
+export const IdeasTab = memo(function IdeasTab({ ideas }) {
   const themeAccents = [
     { border: "border-marigold", bg: "bg-marigold-light/20", tag: "Theme 1", badgeColor: "bg-marigold text-ink" },
     { border: "border-rose", bg: "bg-rose-light/20", tag: "Theme 2", badgeColor: "bg-rose text-white" },
@@ -101,4 +101,5 @@ export function IdeasTab({ ideas }) {
       </div>
     </div>
   );
-}
+});
+

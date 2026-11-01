@@ -1,13 +1,9 @@
+import { memo } from "react";
 import { WalletIcon, UsersIcon, CalendarIcon, CheckCircleIcon } from "./Icons";
+import { formatCurrency } from "../utils/formatters";
 
-export function PlanSummary({ plan, intake, total, tasksDone, tasksTotal }) {
+export const PlanSummary = memo(function PlanSummary({ plan, intake, total, tasksDone, tasksTotal }) {
   const currency = intake?.currency || "INR";
-  const money = (n) =>
-    new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: currency,
-      maximumFractionDigits: 0,
-    }).format(n);
 
   const daysRemaining = Math.max(
     0,
@@ -43,7 +39,7 @@ export function PlanSummary({ plan, intake, total, tasksDone, tasksTotal }) {
             <span>Budget</span>
           </div>
           <div className="mt-1 font-display text-lg font-bold text-ink">
-            {money(total)}
+            {formatCurrency(total, currency)}
           </div>
           <div className="text-[10px] text-ink-light">Total planned</div>
         </div>
@@ -55,7 +51,7 @@ export function PlanSummary({ plan, intake, total, tasksDone, tasksTotal }) {
             <span>Per Guest</span>
           </div>
           <div className="mt-1 font-display text-lg font-bold text-ink">
-            {money(perGuestCost)}
+            {formatCurrency(perGuestCost, currency)}
           </div>
           <div className="text-[10px] text-ink-light">{intake.guests} attendees</div>
         </div>
@@ -88,5 +84,5 @@ export function PlanSummary({ plan, intake, total, tasksDone, tasksTotal }) {
       </div>
     </div>
   );
-}
+});
 

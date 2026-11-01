@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { ClockIcon, CalendarIcon, CheckIcon, CheckCircleIcon, PrinterIcon } from "../Icons";
+import { useState, memo } from "react";
+import { ClockIcon, CheckIcon, PrinterIcon } from "../Icons";
 
-export function TimelineTab({ timeline, onPrint }) {
+export const TimelineTab = memo(function TimelineTab({ timeline, onPrint }) {
   const [completedMilestones, setCompletedMilestones] = useState({});
 
   const toggleMilestone = (idx) => {
@@ -133,5 +133,5 @@ export function TimelineTab({ timeline, onPrint }) {
       </div>
     </div>
   );
-}
+});
 

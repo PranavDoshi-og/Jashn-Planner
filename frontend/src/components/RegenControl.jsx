@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { RefreshCwIcon, SparklesIcon } from "./Icons";
 
 const SUGGESTIONS = {
@@ -28,7 +28,7 @@ const SUGGESTIONS = {
   ],
 };
 
-export function RegenControl({ section, busy, onRun }) {
+export const RegenControl = memo(function RegenControl({ section, busy, onRun }) {
   const [tweak, setTweak] = useState("");
   const isBusy = busy === section;
 
@@ -99,5 +99,5 @@ export function RegenControl({ section, busy, onRun }) {
       </form>
     </div>
   );
-}
+});
 

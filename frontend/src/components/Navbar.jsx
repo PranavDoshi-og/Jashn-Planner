@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { PrinterIcon, DownloadIcon, CopyIcon, CheckIcon, SparklesIcon } from "./Icons";
+import { useState, memo } from "react";
+import { PrinterIcon, DownloadIcon, CopyIcon, CheckIcon } from "./Icons";
 
-export function Navbar({ plan, onPrint, onExport }) {
+export const Navbar = memo(function Navbar({ plan, onPrint, onExport }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -72,5 +72,5 @@ export function Navbar({ plan, onPrint, onExport }) {
       </div>
     </header>
   );
-}
+});
 

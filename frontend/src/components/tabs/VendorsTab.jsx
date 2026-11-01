@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { CheckCircleIcon, CopyIcon, CheckIcon, UsersIcon } from "../Icons";
+import { useState, memo } from "react";
+import { CopyIcon, CheckIcon } from "../Icons";
 
-export function VendorsTab({
+export const VendorsTab = memo(function VendorsTab({
   vendors,
   done,
   setDone,
@@ -199,5 +199,5 @@ export function VendorsTab({
       </div>
     </div>
   );
-}
+});
 
