@@ -34,8 +34,8 @@ async function post(path, body, signal) {
       typeof e.detail === "string"
         ? e.detail
         : r.status === 429
-        ? "Too many requests. Please wait a minute and try again."
-        : "Check the form fields and try again.";
+          ? "Too many requests. Please wait a minute and try again."
+          : "Check the form fields and try again.";
     const err = new Error(message);
     err.status = r.status;
     throw err;
@@ -91,7 +91,7 @@ export default function App() {
         setDone({});
         try {
           localStorage.removeItem("jashn_vendor_tasks");
-        } catch (err) {}
+        } catch (err) { }
         setTab("budget");
       } catch (err) {
         if (err.name !== "AbortError") {
@@ -127,7 +127,7 @@ export default function App() {
           setDone({});
           try {
             localStorage.removeItem("jashn_vendor_tasks");
-          } catch (err) {}
+          } catch (err) { }
         }
       } catch (err) {
         if (err.name !== "AbortError") {
@@ -226,10 +226,10 @@ export default function App() {
               {busy === "all"
                 ? "Planning celebration..."
                 : busy
-                ? `Regenerating ${busy} section...`
-                : plan
-                ? "Celebration plan updated"
-                : ""}
+                  ? `Regenerating ${busy} section...`
+                  : plan
+                    ? "Celebration plan updated"
+                    : ""}
             </p>
 
             {busy === "all" ? (
@@ -292,20 +292,18 @@ export default function App() {
                         aria-selected={isActive}
                         tabIndex={isActive ? 0 : -1}
                         onClick={() => setTab(t.id)}
-                        className={`inline-flex items-center gap-2 rounded-t-xl px-4 py-2.5 text-xs sm:text-sm font-bold transition-all ${
-                          isActive
+                        className={`inline-flex items-center gap-2 rounded-t-xl px-4 py-2.5 text-xs sm:text-sm font-bold transition-all ${isActive
                             ? "bg-surface border-t-2 border-l border-r border-t-rose border-l-border border-r-border text-rose shadow-xs"
                             : "text-ink-muted hover:text-ink hover:bg-mist/50"
-                        }`}
+                          }`}
                       >
                         <Icon className={`w-4 h-4 ${isActive ? "text-rose" : "text-ink-muted"}`} />
                         <span>{t.label}</span>
                         {t.id === "vendors" && tasksTotal > 0 && (
-                          <span className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
-                            tasksDone === tasksTotal
+                          <span className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${tasksDone === tasksTotal
                               ? "bg-teal-light text-teal"
                               : "bg-mist text-ink-muted"
-                          }`}>
+                            }`}>
                             {tasksDone}/{tasksTotal}
                           </span>
                         )}

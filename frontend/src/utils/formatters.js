@@ -34,3 +34,4 @@ export function formatCurrency(amount, currency = "INR") {
   }
   return formatter.format(amount);
 }
+

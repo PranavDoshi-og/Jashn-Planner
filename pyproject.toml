@@ -6,3 +6,4 @@ pythonpath = ["backend"]
 line-length = 100
 target-version = "py312"
 exclude = [".venv", "node_modules", "frontend/dist"]
+
