@@ -51,3 +51,4 @@ describe("TimelineTab", () => {
     expect(onPrint).toHaveBeenCalledTimes(1);
   });
 });
+

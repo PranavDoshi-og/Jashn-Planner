@@ -34,3 +34,4 @@ describe("formatCurrency utility", () => {
     expect(second).toBeDefined();
   });
 });
+

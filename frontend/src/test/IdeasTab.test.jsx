@@ -37,3 +37,4 @@ describe("IdeasTab", () => {
     expect(screen.getByText("Folk Haldi rituals and Antakshari")).toBeInTheDocument();
   });
 });
+
