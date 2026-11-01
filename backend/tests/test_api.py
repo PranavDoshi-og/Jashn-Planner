@@ -55,8 +55,8 @@ def test_normalize_budget_sums_exactly():
         for c, p in [("a", 33.3), ("b", 33.3), ("c", 33.3)]
     ]
     out = main.normalize_budget(lines, 1000001)
-    assert sum(l["amount"] for l in out) == 1000001
-    assert abs(sum(l["percent"] for l in out) - 100) < 0.5
+    assert sum(item["amount"] for item in out) == 1000001
+    assert abs(sum(item["percent"] for item in out) - 100) < 0.5
 
 
 def test_normalize_budget_handles_zero_and_negative_percent():
@@ -64,7 +64,7 @@ def test_normalize_budget_handles_zero_and_negative_percent():
         BudgetLine(category="a", percent=-5, amount=0, note=""),
         BudgetLine(category="b", percent=0, amount=0, note=""),
     ]
-    assert sum(l["amount"] for l in main.normalize_budget(lines, 5000)) == 5000
+    assert sum(item["amount"] for item in main.normalize_budget(lines, 5000)) == 5000
 
 
 def test_normalize_budget_single_line():
@@ -99,7 +99,8 @@ def test_invalid_input_rejected(patch):
 
 
 def test_unknown_section_rejected():
-    assert client.post("/api/section", json={"intake": GOOD, "section": "secrets"}).status_code == 422
+    res = client.post("/api/section", json={"intake": GOOD, "section": "secrets"})
+    assert res.status_code == 422
 
 
 def test_user_text_is_wrapped_as_data():

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Navbar } from "./components/Navbar";
 import { EventForm } from "./components/EventForm";
 import { PlanSummary } from "./components/PlanSummary";
@@ -11,8 +11,7 @@ import { IdeasTab } from "./components/tabs/IdeasTab";
 import { PrintView } from "./components/PrintView";
 import { PRESETS } from "./types/presets";
 import { WalletIcon, ClockIcon, UsersIcon, SparklesIcon } from "./components/Icons";
-
-const API = import.meta.env.VITE_API_URL ?? "";
+import { usePlanManager } from "./hooks/usePlanManager";
 
 const TABS = [
   { id: "budget", label: "Budget", icon: WalletIcon },
@@ -21,37 +20,26 @@ const TABS = [
   { id: "ideas", label: "Ideas", icon: SparklesIcon },
 ];
 
-async function post(path, body, signal) {
-  const r = await fetch(`${API}${path}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-    signal,
-  });
-  if (!r.ok) {
-    const e = await r.json().catch(() => ({}));
-    const message =
-      typeof e.detail === "string"
-        ? e.detail
-        : r.status === 429
-          ? "Too many requests. Please wait a minute and try again."
-          : "Check the form fields and try again.";
-    const err = new Error(message);
-    err.status = r.status;
-    throw err;
-  }
-  return r.json();
-}
-
+/**
+ * Main Jashn Application Orchestrator.
+ * Connects event intake, plan generation, and section modules with accessible ARIA tab navigation.
+ */
 export default function App() {
-  const [form, setForm] = useState(PRESETS[0].form);
-  const [intake, setIntake] = useState(null);
-  const [plan, setPlan] = useState(null);
-  const [total, setTotal] = useState(PRESETS[0].form.budget);
+  const {
+    form,
+    setForm,
+    intake,
+    plan,
+    total,
+    setTotal,
+    busy,
+    error,
+    rateLimitCountdown,
+    generate,
+    regen,
+  } = usePlanManager();
+
   const [tab, setTab] = useState("budget");
-  const [busy, setBusy] = useState(null);
-  const [error, setError] = useState("");
-  const [rateLimitCountdown, setRateLimitCountdown] = useState(0);
   const [done, setDone] = useState(() => {
     try {
       const saved = localStorage.getItem("jashn_vendor_tasks");
@@ -61,86 +49,35 @@ export default function App() {
     }
   });
 
-  const ctrl = useRef(null);
-
-  // Rate limit countdown effect
-  useEffect(() => {
-    if (rateLimitCountdown <= 0) return;
-    const interval = setInterval(() => {
-      setRateLimitCountdown((prev) => (prev > 1 ? prev - 1 : 0));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [rateLimitCountdown]);
-
-  const nextSignal = useCallback(() => {
-    ctrl.current?.abort();
-    ctrl.current = new AbortController();
-    return ctrl.current.signal;
-  }, []);
-
-  const generate = useCallback(
-    async (e) => {
-      if (e) e.preventDefault();
-      setBusy("all");
-      setError("");
-      try {
-        const data = await post("/api/plan", form, nextSignal());
-        setPlan(data);
-        setIntake(form);
-        setTotal(form.budget);
+  const handleGenerate = useCallback(
+    (e) => {
+      generate(e, () => {
         setDone({});
         try {
           localStorage.removeItem("jashn_vendor_tasks");
-        } catch (err) { }
-        setTab("budget");
-      } catch (err) {
-        if (err.name !== "AbortError") {
-          setError(err.message);
-          if (err.status === 429) {
-            setRateLimitCountdown(60);
-          }
+        } catch {
+          // ignore
         }
-      } finally {
-        setBusy(null);
-      }
+        setTab("budget");
+      });
     },
-    [form, nextSignal]
+    [generate]
   );
 
-  const regen = useCallback(
-    async (section, tweak) => {
-      setBusy(section);
-      setError("");
-      try {
-        const data = await post(
-          "/api/section",
-          {
-            intake: { ...intake, budget: total },
-            section,
-            tweak,
-            categories: plan?.budget?.map((b) => b.category) || [],
-          },
-          nextSignal()
-        );
-        setPlan((p) => ({ ...p, [section]: data[section] }));
-        if (section === "vendors") {
+  const handleRegen = useCallback(
+    (section, tweak) => {
+      regen(section, tweak, (sec) => {
+        if (sec === "vendors") {
           setDone({});
           try {
             localStorage.removeItem("jashn_vendor_tasks");
-          } catch (err) { }
-        }
-      } catch (err) {
-        if (err.name !== "AbortError") {
-          setError(err.message);
-          if (err.status === 429) {
-            setRateLimitCountdown(60);
+          } catch {
+            // ignore
           }
         }
-      } finally {
-        setBusy(null);
-      }
+      });
     },
-    [intake, total, plan, nextSignal]
+    [regen]
   );
 
   const handlePrint = useCallback(() => {
@@ -166,7 +103,7 @@ export default function App() {
     URL.revokeObjectURL(url);
   }, [plan, intake, total]);
 
-  // Keyboard navigation for tablist
+  // Accessible keyboard navigation for tabs
   const onTabKey = useCallback(
     (e) => {
       const currentIndex = TABS.findIndex((t) => t.id === tab);
@@ -213,7 +150,7 @@ export default function App() {
             <EventForm
               form={form}
               setForm={setForm}
-              onSubmit={generate}
+              onSubmit={handleGenerate}
               busy={busy}
               error={error}
               rateLimitCountdown={rateLimitCountdown}
@@ -226,10 +163,10 @@ export default function App() {
               {busy === "all"
                 ? "Planning celebration..."
                 : busy
-                  ? `Regenerating ${busy} section...`
-                  : plan
-                    ? "Celebration plan updated"
-                    : ""}
+                ? `Regenerating ${busy} section...`
+                : plan
+                ? "Celebration plan updated"
+                : ""}
             </p>
 
             {busy === "all" ? (
@@ -292,18 +229,22 @@ export default function App() {
                         aria-selected={isActive}
                         tabIndex={isActive ? 0 : -1}
                         onClick={() => setTab(t.id)}
-                        className={`inline-flex items-center gap-2 rounded-t-xl px-4 py-2.5 text-xs sm:text-sm font-bold transition-all ${isActive
+                        className={`inline-flex items-center gap-2 rounded-t-xl px-4 py-2.5 text-xs sm:text-sm font-bold transition-all ${
+                          isActive
                             ? "bg-surface border-t-2 border-l border-r border-t-rose border-l-border border-r-border text-rose shadow-xs"
                             : "text-ink-muted hover:text-ink hover:bg-mist/50"
-                          }`}
+                        }`}
                       >
                         <Icon className={`w-4 h-4 ${isActive ? "text-rose" : "text-ink-muted"}`} />
                         <span>{t.label}</span>
                         {t.id === "vendors" && tasksTotal > 0 && (
-                          <span className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${tasksDone === tasksTotal
-                              ? "bg-teal-light text-teal"
-                              : "bg-mist text-ink-muted"
-                            }`}>
+                          <span
+                            className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
+                              tasksDone === tasksTotal
+                                ? "bg-teal-light text-teal"
+                                : "bg-mist text-ink-muted"
+                            }`}
+                          >
                             {tasksDone}/{tasksTotal}
                           </span>
                         )}
@@ -324,7 +265,7 @@ export default function App() {
                     key={tab}
                     section={tab}
                     busy={busy}
-                    onRun={regen}
+                    onRun={handleRegen}
                   />
 
                   {tab === "budget" && (
